@@ -18,7 +18,7 @@ Usage
     	cloudformation stack name (required)
 
 
-AWS premissions
+AWS permissions
 ---
  * DescribeStackResources
  * DescribeAutoScalingGroups
