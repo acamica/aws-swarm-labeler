@@ -5,5 +5,5 @@ RUN apk add -U ca-certificates
 
 COPY aws_swarm_labeler /
 
-CMD /aws_swarm_labeler
+ENTRYPOINT ["/aws_swarm_labeler"]
 

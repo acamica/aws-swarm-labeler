@@ -13,4 +13,5 @@ run:
 	docker run -it -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/.aws/credentials:/root/.aws/credentials ${IMAGE_NAME} /aws_swarm_labeler $(ARGS)
 push:
 	docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:${VERSION} && docker push ${REGISTRY}/${IMAGE_NAME}:${VERSION}
+	docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:`git rev-parse --short HEAD` && docker push ${REGISTRY}/${IMAGE_NAME}:`git rev-parse --short HEAD`
 
