@@ -25,7 +25,7 @@ func main() {
     flag.StringVar(&stackName , "stack" ,""         ,"cloudformation stack name (required)")
     flag.StringVar(&regionName, "region","us-east-1","aws region")
     flag.StringVar(&filter    , "filter",".*"       ,"filter tag regex")
-    flag.StringVar(&schedule  , "cron"  ,""         ,"cron expression, like '5 * * * *' for every five minutes. See [docs](https://godoc.org/github.com/robfig/cron)")
+    flag.StringVar(&schedule  , "cron"  ,""         ,"cron expression, like '@every 5m' for every five minutes or '15 * * * *' for every minute at 15th second. See [docs](https://godoc.org/github.com/robfig/cron)")
     flag.Parse()
 
     if "" == stackName {
@@ -137,7 +137,6 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
 
             spec := resp.Spec
 
-            spec.Annotations.Labels = make(map[string]string)
             for key, value := range instances[node.Description.Hostname] {
                 fmt.Println("instance:", node.ID, "add label", key, "=", value)
                 spec.Annotations.Labels[key] = value

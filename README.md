@@ -9,7 +9,7 @@ Usage
 ./aws_swarm_labeler -cron <cron-exp> -filter <filter-exp> -region <regsion-name> -stack <stack-name>
 ```
  * **-cron** 
-    	cron expression, like '5 * * * *' for every five minutes. see [docs](https://godoc.org/github.com/robfig/cron)
+    	cron expression, like '@every 5m' for every five minutes or '15 * * * *' for every minute at 15th second. See [docs](https://godoc.org/github.com/robfig/cron)
  * **-filter** 
     	filter tag regex (default ".*")
  * **-region**
@@ -33,6 +33,7 @@ Example:
 docker run -it \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v ${HOME}/.aws/credentials:/root/.aws/credentials \
-	swarm_labeler /swarm_labeler -stack prod -cron '30 * * * *'
+	aws_swarm_labeler \
+        -stack prod -cron '@every 30m'
 ```
 
