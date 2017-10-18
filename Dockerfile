@@ -1,9 +1,10 @@
-FROM alpine
+FROM golang:1.8
 
-#https://github.com/zenazn/goji/issues/126
-RUN apk add -U ca-certificates
+WORKDIR /go/src/app
+COPY ./src/ ./
 
-COPY aws_swarm_labeler /
+RUN go-wrapper download
+RUN go-wrapper install
 
-ENTRYPOINT ["/aws_swarm_labeler"]
+CMD ["go-wrapper", "run"] 
 
