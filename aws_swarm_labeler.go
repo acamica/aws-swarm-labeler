@@ -75,41 +75,23 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
         "at", time.Now().Format(time.ANSIC),
     )
 
-    var groups []*string
-    { // get auto scaling groups from stack name
-        params := &cloudformation.DescribeStackResourcesInput{
+    //aws cloudformation describe-stacks --stack-name prod
+    var stackId *string
+    { // get stack id
+        params := &cloudformation.DescribeStacksInput{
             StackName: &stackName,
         }
-        resp, err := cf.DescribeStackResources(params)
+        resp, err := cf.DescribeStacks(params)
         if err != nil { panic(err) }
 
-        for _, stackResource := range resp.StackResources {
-            if "AWS::AutoScaling::AutoScalingGroup" == *stackResource.ResourceType {
-                groups = append(groups, stackResource.PhysicalResourceId)
-            }
-        }
-
+        stackId = resp.Stacks.StackId
     }
 
-    var instanceIds []*string
-    { // get tags and instances from every auto scaling group
-        params := &autoscaling.DescribeAutoScalingGroupsInput{
-            AutoScalingGroupNames: groups,
-        }
-        resp, err := as.DescribeAutoScalingGroups(params)
-        if err != nil { panic(err) }
-
-        for _, asg := range resp.AutoScalingGroups {
-            for _, instance := range asg.Instances {
-                instanceIds = append(instanceIds, instance.InstanceId)
-            }
-        }
-    }
-
+    //aws ec2 describe-instances --filters "Name=tag:swarm-stack-id,Values=<stackId>"
     var instances = make(map[string]map[string]string)
     { //get instances to be tagged
         params := &ec2.DescribeInstancesInput{
-            InstanceIds: instanceIds,
+            Filters: append("Name=tag:swarm-stack-id,Values=",stackId)
         }
         resp, err := ec.DescribeInstances(params)
         if err != nil { panic(err) }
