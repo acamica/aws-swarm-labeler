@@ -8,7 +8,6 @@ import (
     "github.com/docker/docker/client"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/cloudformation"
-    "github.com/aws/aws-sdk-go/service/autoscaling"
     "github.com/aws/aws-sdk-go/service/ec2"
     "github.com/aws/aws-sdk-go/aws"
     "fmt"
@@ -62,7 +61,6 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
     if err != nil { panic(err) }
 
     cf := cloudformation.New(aws_session)
-    as := autoscaling.New(aws_session)
     ec := ec2.New(aws_session)
 
     // setup docker client
@@ -84,14 +82,21 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
         resp, err := cf.DescribeStacks(params)
         if err != nil { panic(err) }
 
-        stackId = resp.Stacks.StackId
+        if len(resp.Stacks) == 0 { panic("Stack not found") }
+        stackId = resp.Stacks[0].StackId
     }
 
     //aws ec2 describe-instances --filters "Name=tag:swarm-stack-id,Values=<stackId>"
     var instances = make(map[string]map[string]string)
     { //get instances to be tagged
         params := &ec2.DescribeInstancesInput{
-            Filters: append("Name=tag:swarm-stack-id,Values=",stackId)
+               Filters: []*ec2.Filter{
+                   {
+                       Name: aws.String("tag:swarm-stack-id"),
+
+                       Values: []*string{stackId,},
+                   },
+               },
         }
         resp, err := ec.DescribeInstances(params)
         if err != nil { panic(err) }
