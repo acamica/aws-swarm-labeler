@@ -35,25 +35,6 @@ func main() {
     filterRegex, err := regexp.Compile(filter)
     if err != nil { panic(err) }
 
-    if "" == schedule {
-        run(regionName, stackName, *filterRegex)
-    } else {
-        fmt.Println("Running croned updates:", schedule)
-
-        c := cron.New()
-        err := c.AddFunc(schedule, func() {
-            run(regionName, stackName, *filterRegex)
-        })
-        if err != nil { panic(err) }
-
-        c.Start()
-        for true {
-            time.Sleep(5000)
-        }
-    }
-}
-
-func run(regionName string, stackName string, filterRegex regexp.Regexp) {
     // setup aws session
     aws_session, err := session.NewSessionWithOptions(session.Options{
         Config: aws.Config{ Region: &regionName, },
@@ -65,7 +46,27 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
 
     // setup docker client
     cli, err := client.NewEnvClient()
+
     if err != nil { panic(err) }
+    if "" == schedule {
+        run(regionName, stackName, *filterRegex, cf, ec, cli)
+    } else {
+        fmt.Println("Running croned updates:", schedule)
+
+        c := cron.New()
+        err := c.AddFunc(schedule, func() {
+            run(regionName, stackName, *filterRegex, cf, ec, cli)
+        })
+        if err != nil { panic(err) }
+
+        c.Start()
+        for true {
+            time.Sleep(5000)
+        }
+    }
+}
+
+func run(regionName string, stackName string, filterRegex regexp.Regexp, cf *cloudformation.CloudFormation, ec *ec2.EC2, cli *client.Client) {
 
     fmt.Println(
         "Updating tags for", stackName,
@@ -73,7 +74,7 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
         "at", time.Now().Format(time.ANSIC),
     )
 
-    //aws cloudformation describe-stacks --stack-name prod
+    // aws cloudformation describe-stacks --stack-name prod
     var stackId *string
     { // get stack id
         params := &cloudformation.DescribeStacksInput{
@@ -90,13 +91,13 @@ func run(regionName string, stackName string, filterRegex regexp.Regexp) {
     var instances = make(map[string]map[string]string)
     { //get instances to be tagged
         params := &ec2.DescribeInstancesInput{
-               Filters: []*ec2.Filter{
-                   {
-                       Name: aws.String("tag:swarm-stack-id"),
+              Filters: []*ec2.Filter{
+                  {
+                      Name: aws.String("tag:swarm-stack-id"),
 
-                       Values: []*string{stackId,},
-                   },
-               },
+                      Values: []*string{stackId,},
+                  },
+              },
         }
         resp, err := ec.DescribeInstances(params)
         if err != nil { panic(err) }

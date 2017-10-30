@@ -1,10 +1,10 @@
 IMAGE_NAME=aws_swarm_labeler
-VERSION=0.1
+VERSION=0.3
 REGISTRY?=hub.docker.com
 
 .PHONY: run
 
-all: build push
+all: build 
 
 build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o aws_swarm_labeler
